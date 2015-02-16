@@ -1,0 +1,114 @@
+---
+title: "Reproducible Research - Peer Assigment 1"
+author: "Jorge A. Sanchez Nuñez"
+date: "Sunday, February 15, 2015"
+output: html_document
+---
+
+### 1. Loading and Preprocessing the Data
+
+Download
+unzip
+and load data
+
+```{r}
+url <- "https://github.com/josanu/RepData_PeerAssessment1/blob/master/activity.zip"
+if (!file.exists("activity.csv")) {
+  download.file(url, destfile = "activity.zip")
+  unz(unz("activity.zip", "activity.csv"))
+}
+
+activity <- read.csv("activity.csv")
+```
+
+### 2. Process/transform the data (if necessary) into a format suitable for your analysis
+
+## What is mean total number of steps taken per day ?
+
+```{r}
+
+steps <- aggregate(steps~date,activity,sum)
+
+hist(steps$steps, main = "Total Steps per Day", col="blue", xlab="Number of Steps")
+
+```
+
+## mean and median of the total number of steps taken per day
+
+```{r}
+
+rmean <- mean(steps$steps)
+rmedian <- median(steps$steps)
+```
+
+The mean is `r rmean` and the median is `r rmedian`
+
+## what is the average daily activity pattern ?
+
+* Calculate average steps for each interval
+* Plot the Average Number Steps per Day by Interval
+* Find interval with most average steps
+
+```{r}
+
+steps <- aggregate(steps~interval,activity,mean)
+plot(steps$interval, steps$steps, type="l", xlab="Interval", ylab="Number of Steps", main="Averge Number of Steps per Day by Interval")
+```
+
+
+```{r}
+max <- steps[which.max(steps$steps),1]
+```
+
+The maximum number of steps is `r max` for the 5-minute interval
+
+## Impute missing values
+
+Calculate the total number of missing values
+
+```{r}
+sum(is.na(activity))
+```
+
+```{r}
+imputed <- activity[complete.cases(activity),]
+head(imputed)
+```
+
+Histogram of the total number of steps taken each day
+
+
+
+
+Calculate and report the mean and median total number of steps taken per day.
+
+```{r}
+
+stepsimputedmean <- mean(imputed$steps)
+stepsimputedmedian <- median(imputed$steps)
+```
+
+* Mean imputed : `r stepsimputedmean`
+* Median imputed : `r stepsimputedmedian`
+
+# Are there diferences in activity patterns between weekdays and weekends ?
+
+Create a new factor variable in the dataset (weekday & weekend)
+
+```{r}
+imputed$dateType <-  ifelse(as.POSIXlt(imputed$date)$wday %in% c(0,6), 'weekend', 'weekday')
+
+
+```
+
+the Graph
+
+```{r}
+par(mfrow=c(2,1))
+
+
+for (type in c("weekend", "weekday")) {
+    steps.type <- aggregate(steps ~ interval, data = imputed, subset = imputed$dateType == type, FUN = mean)
+    plot(steps.type, type = "l", main = type)
+}
+````
